@@ -2,8 +2,10 @@ package com.jhenriquedsm.webservice.services;
 
 import com.jhenriquedsm.webservice.entities.User;
 import com.jhenriquedsm.webservice.repositories.UserRepository;
+import com.jhenriquedsm.webservice.services.exceptions.DatabaseException;
 import com.jhenriquedsm.webservice.services.exceptions.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,7 +31,13 @@ public class UserService {
     }
 
     public void delete(Long id){
-        userRepository.deleteById(id);
+        userRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException(id));
+        try {
+            userRepository.deleteById(id);
+        } catch (DataIntegrityViolationException e){
+            throw new DatabaseException(e.getMessage());
+        }
     }
 
     public User update(Long id, User user) {
